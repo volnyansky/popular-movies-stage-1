@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 
+import java.util.List;
+
 import stanislav.volnjanskij.popularmovies.R;
 import stanislav.volnjanskij.popularmovies.api.MovieModel;
 
@@ -71,4 +73,5 @@ public class MoviesListAdapter extends ArrayAdapter<MovieModel> {
         }
 
     }
+
 }

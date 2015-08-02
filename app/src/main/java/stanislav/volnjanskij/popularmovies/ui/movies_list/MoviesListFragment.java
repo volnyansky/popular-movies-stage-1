@@ -8,6 +8,7 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +17,9 @@ import android.view.ViewTreeObserver;
 
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -32,13 +35,12 @@ import stanislav.volnjanskij.popularmovies.api.MovieModel;
  * Large screen devices (such as tablets) are supported by replacing the ListView
  * with a GridView.
  * <p/>
- * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
 public class MoviesListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<List<MovieModel>>{
 
-
+    MovieModel[] data;
 
 
     /**
@@ -105,14 +107,24 @@ public class MoviesListFragment extends Fragment implements
 
         ViewTreeObserver vto = rootView.getViewTreeObserver();
         //wait for layout rendiring to obtain grid view width in pixels
+        if (savedInstanceState!=null){
+            data= (MovieModel[]) savedInstanceState.getParcelableArray("movies");
+        }
+
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 rootView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 int width = gridView.getMeasuredWidth()/ gridView.getNumColumns();
-                mAdapter.setImageWidth(width );
-                mAdapter.setImageHeight((int) (width *1.5837));
-                getLoaderManager().initLoader(0, null, MoviesListFragment.this).forceLoad();
+                mAdapter.setImageWidth(width);
+                mAdapter.setImageHeight((int) (width * 1.5837));
+                if (data==null){
+                    getLoaderManager().initLoader(0, null, MoviesListFragment.this).forceLoad();
+                }else{
+                    mAdapter.addAll(data);
+                    mAdapter.notifyDataSetChanged();
+                }
+
 
             }
         });
@@ -127,6 +139,11 @@ public class MoviesListFragment extends Fragment implements
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArray("movies", data);
+    }
 
     @Override
     public Loader<List<MovieModel>> onCreateLoader(int id, Bundle args) {
@@ -135,9 +152,15 @@ public class MoviesListFragment extends Fragment implements
     }
 
     @Override
-    public void onLoadFinished(Loader<List<MovieModel>> loader, List<MovieModel> data) {
+    public void onLoadFinished(Loader<List<MovieModel>> loader, List<MovieModel> loadedData) {
+        if (loadedData.size()==0) {
+            Toast.makeText(getActivity(),getResources().getString(R.string.network_error),Toast.LENGTH_LONG).show();
+            return;
+        }
         mAdapter.clear();
-        mAdapter.addAll(data);
+        mAdapter.addAll(loadedData);
+        this.data=new MovieModel[loadedData.size()];
+        loadedData.toArray(this.data);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -158,12 +181,18 @@ public class MoviesListFragment extends Fragment implements
 
         @Override
         public List<MovieModel> loadInBackground() {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            String order=prefs.getString("sort_order","");
-            if (order.equals("top_rated")){
-                return APIClient.getInstance().getTopRated();
-            }else {
-                return APIClient.getInstance().getPopular();
+            try {
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+                String order = prefs.getString("sort_order", "");
+                if (order.equals("top_rated")) {
+                    return APIClient.getInstance().getTopRated();
+                } else {
+                    return APIClient.getInstance().getPopular();
+                }
+            }catch (Exception ex){
+
+                return new ArrayList<MovieModel>();
             }
         }
 
