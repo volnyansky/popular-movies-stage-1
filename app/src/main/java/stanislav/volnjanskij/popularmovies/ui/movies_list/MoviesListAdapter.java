@@ -40,8 +40,9 @@ public class MoviesListAdapter extends ArrayAdapter<MovieModel> {
         }
         viewHolder= (ViewHolder) convertView.getTag();
         MovieModel movie=getItem(position);
-
-        movie.setCachedPosterPath("http://image.tmdb.org/t/p/w" + String.valueOf(imageWidth) + "/" + movie.getPosterPath());
+        if (movie.getCachedPosterPath()==null) {
+            movie.setCachedPosterPath("http://image.tmdb.org/t/p/w" + String.valueOf(imageWidth) + "/" + movie.getPosterPath());
+        }
         viewHolder.title.setText(movie.getTitle());
         viewHolder.image.setMinimumHeight(imageHeight);
         viewHolder.image.setMinimumWidth(imageWidth);
