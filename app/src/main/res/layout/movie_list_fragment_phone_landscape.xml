@@ -6,10 +6,7 @@
 		android:id="@+id/grid"
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:numColumns="2"
-	    android:horizontalSpacing="0dp"
-	    android:verticalSpacing="0dp"
-
+		android:numColumns="4"
 		>
 
 	</GridView>
